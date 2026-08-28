@@ -28,20 +28,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
-# ---------------------------------------------------------
-# Dataset Registry
-# ---------------------------------------------------------
-
 DATASETS = {
     "iris": load_iris,
     "wine": load_wine,
     "breast_cancer": load_breast_cancer,
 }
-
-
-# ---------------------------------------------------------
-# Tool 1: Dataset Summary
-# ---------------------------------------------------------
 
 def load_dataset_summary(dataset_name: str) -> str:
     """
@@ -83,11 +74,6 @@ def load_dataset_summary(dataset_name: str) -> str:
     }
 
     return json.dumps(summary)
-
-
-# ---------------------------------------------------------
-# Tool 2: Scikit-Learn Model Training
-# ---------------------------------------------------------
 
 def train_sklearn_model(
     dataset_name: str,
@@ -154,19 +140,15 @@ def train_sklearn_model(
             )
         })
 
-    # Train model
     clf.fit(X_train, y_train)
 
-    # Test-set predictions
     preds = clf.predict(X_test)
 
-    # Test accuracy
     acc = accuracy_score(
         y_test,
         preds,
     )
 
-    # 5-fold cross-validation
     cv_scores = cross_val_score(
         clf,
         data.data,
@@ -192,11 +174,6 @@ def train_sklearn_model(
     }
 
     return json.dumps(result)
-
-
-# ---------------------------------------------------------
-# Tool 3: PyTorch MLP
-# ---------------------------------------------------------
 
 def train_pytorch_mlp(
     dataset_name: str,
@@ -228,10 +205,6 @@ def train_pytorch_mlp(
         )
     )
 
-    # -----------------------------------------------------
-    # Feature Standardization
-    # -----------------------------------------------------
-
     mean = X_train.mean(axis=0)
 
     std = (
@@ -247,19 +220,11 @@ def train_pytorch_mlp(
         X_test - mean
     ) / std
 
-    # -----------------------------------------------------
-    # Dataset dimensions
-    # -----------------------------------------------------
-
     num_features = X_train.shape[1]
 
     num_classes = len(
         np.unique(data.target)
     )
-
-    # -----------------------------------------------------
-    # Convert NumPy arrays to PyTorch tensors
-    # -----------------------------------------------------
 
     X_t = torch.tensor(
         X_train,
@@ -281,10 +246,6 @@ def train_pytorch_mlp(
         dtype=torch.long,
     )
 
-    # -----------------------------------------------------
-    # Neural Network
-    # -----------------------------------------------------
-
     model = nn.Sequential(
         nn.Linear(
             num_features,
@@ -297,20 +258,12 @@ def train_pytorch_mlp(
         ),
     )
 
-    # -----------------------------------------------------
-    # Loss and optimizer
-    # -----------------------------------------------------
-
     criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.Adam(
         model.parameters(),
         lr=lr,
     )
-
-    # -----------------------------------------------------
-    # Training loop
-    # -----------------------------------------------------
 
     for epoch in range(epochs):
 
@@ -326,10 +279,6 @@ def train_pytorch_mlp(
         loss.backward()
 
         optimizer.step()
-
-    # -----------------------------------------------------
-    # Evaluation
-    # -----------------------------------------------------
 
     with torch.no_grad():
 
@@ -369,7 +318,6 @@ def train_pytorch_mlp(
 
     return json.dumps(result)
 
-
 def tune_hyperparameters(
     dataset_name: str,
     model_type: str,
@@ -388,9 +336,6 @@ def tune_hyperparameters(
     the test set remains unseen until final evaluation.
     """
 
-    # -------------------------------------------------------
-    # Validate dataset
-    # -------------------------------------------------------
     name = dataset_name.lower().strip()
 
     if name not in DATASETS:
@@ -401,9 +346,6 @@ def tune_hyperparameters(
             )
         })
 
-    # -------------------------------------------------------
-    # Validate general parameters
-    # -------------------------------------------------------
     if not 0 < test_size < 1:
         return json.dumps({
             "error": "test_size must be between 0 and 1."
@@ -414,20 +356,11 @@ def tune_hyperparameters(
             "error": "cv must be at least 2."
         })
 
-    # -------------------------------------------------------
-    # Load dataset
-    # -------------------------------------------------------
     data = DATASETS[name]()
 
     X = data.data
     y = data.target
 
-    # -------------------------------------------------------
-    # Hold-out test set
-    #
-    # GridSearchCV will only see X_train/y_train.
-    # X_test/y_test stay completely unseen until the end.
-    # -------------------------------------------------------
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -438,25 +371,13 @@ def tune_hyperparameters(
 
     model_type = model_type.lower().strip()
 
-    # -------------------------------------------------------
-    # SVC / Kernel SVM
-    # -------------------------------------------------------
     if model_type in {"svc", "svm", "kernel_svm"}:
 
-        # Scaling is important for SVMs.
-        #
-        # StandardScaler is placed inside a Pipeline so that
-        # scaling occurs independently inside each CV fold.
-        # This avoids data leakage.
         estimator = Pipeline([
             ("scaler", StandardScaler()),
             ("svc", SVC()),
         ])
 
-        # Separate dictionaries make the grid logically cleaner:
-        # linear kernel does not need gamma/degree,
-        # RBF uses gamma,
-        # polynomial uses degree.
         param_grid = [
             {
                 "svc__kernel": ["linear"],
@@ -477,9 +398,6 @@ def tune_hyperparameters(
 
         canonical_model_name = "svc"
 
-    # -------------------------------------------------------
-    # Decision Tree
-    # -------------------------------------------------------
     elif model_type == "decision_tree":
 
         estimator = DecisionTreeClassifier(
@@ -518,9 +436,6 @@ def tune_hyperparameters(
             )
         })
 
-    # -------------------------------------------------------
-    # Grid Search
-    # -------------------------------------------------------
     grid_search = GridSearchCV(
         estimator=estimator,
         param_grid=param_grid,
@@ -536,9 +451,6 @@ def tune_hyperparameters(
         y_train,
     )
 
-    # -------------------------------------------------------
-    # Final evaluation on untouched test set
-    # -------------------------------------------------------
     best_model = grid_search.best_estimator_
 
     test_predictions = best_model.predict(
@@ -550,9 +462,6 @@ def tune_hyperparameters(
         test_predictions,
     )
 
-    # -------------------------------------------------------
-    # Extract CV statistics of best configuration
-    # -------------------------------------------------------
     best_index = grid_search.best_index_
 
     best_cv_std = grid_search.cv_results_[
@@ -561,13 +470,6 @@ def tune_hyperparameters(
 
     best_params = grid_search.best_params_.copy()
 
-    # Pipeline parameters appear as:
-    #
-    # svc__C
-    # svc__kernel
-    # svc__gamma
-    #
-    # Remove "svc__" so the LLM gets cleaner JSON.
     if canonical_model_name == "svc":
         best_params = {
             key.replace("svc__", ""): value
@@ -578,9 +480,6 @@ def tune_hyperparameters(
         grid_search.cv_results_["params"]
     )
 
-    # -------------------------------------------------------
-    # Return JSON observation for ReAct agent
-    # -------------------------------------------------------
     result = {
         "search_method": "GridSearchCV",
         "dataset": name,
@@ -631,10 +530,6 @@ def feature_selection_analysis(
     features is also evaluated for comparison.
     """
 
-    # -----------------------------------------------------
-    # Validate dataset
-    # -----------------------------------------------------
-
     name = dataset_name.lower().strip()
 
     if name not in DATASETS:
@@ -645,10 +540,6 @@ def feature_selection_analysis(
             )
         })
 
-    # -----------------------------------------------------
-    # Validate common parameters
-    # -----------------------------------------------------
-
     if not 0 < test_size < 1:
         return json.dumps({
             "error": "test_size must be between 0 and 1."
@@ -658,10 +549,6 @@ def feature_selection_analysis(
         return json.dumps({
             "error": "cv must be at least 2."
         })
-
-    # -----------------------------------------------------
-    # Load dataset
-    # -----------------------------------------------------
 
     data = DATASETS[name]()
 
@@ -675,10 +562,6 @@ def feature_selection_analysis(
 
     original_feature_count = X.shape[1]
 
-    # -----------------------------------------------------
-    # Train/Test Split
-    # -----------------------------------------------------
-
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -686,10 +569,6 @@ def feature_selection_analysis(
         random_state=42,
         stratify=y,
     )
-
-    # -----------------------------------------------------
-    # Baseline model using all original features
-    # -----------------------------------------------------
 
     baseline_pipeline = Pipeline([
         (
@@ -720,10 +599,6 @@ def feature_selection_analysis(
     )
 
     method = method.lower().strip()
-
-    # =====================================================
-    # PCA
-    # =====================================================
 
     if method == "pca":
 
@@ -825,10 +700,6 @@ def feature_selection_analysis(
                 4,
             ),
         })
-
-    # =====================================================
-    # Sequential Feature Selection
-    # =====================================================
 
     elif method in {
         "sequential",
@@ -952,10 +823,6 @@ def feature_selection_analysis(
             ),
         })
 
-    # =====================================================
-    # Unsupported Method
-    # =====================================================
-
     else:
 
         return json.dumps({
@@ -1050,10 +917,6 @@ def train_regularized_pytorch_classifier(
         - exponential
     """
 
-    # -----------------------------------------------------
-    # Validate dataset
-    # -----------------------------------------------------
-
     name = dataset_name.lower().strip()
 
     if name not in DATASETS:
@@ -1063,10 +926,6 @@ def train_regularized_pytorch_classifier(
                 f"Options: {list(DATASETS.keys())}"
             )
         })
-
-    # -----------------------------------------------------
-    # Validate parameters
-    # -----------------------------------------------------
 
     if hidden_dim < 4:
         return json.dumps({
@@ -1147,10 +1006,6 @@ def train_regularized_pytorch_classifier(
             )
         })
 
-    # -----------------------------------------------------
-    # Reproducibility
-    # -----------------------------------------------------
-
     np.random.seed(
         42
     )
@@ -1164,19 +1019,11 @@ def train_regularized_pytorch_classifier(
             42
         )
 
-    # -----------------------------------------------------
-    # Select device
-    # -----------------------------------------------------
-
     device = torch.device(
         "cuda"
         if torch.cuda.is_available()
         else "cpu"
     )
-
-    # -----------------------------------------------------
-    # Load dataset
-    # -----------------------------------------------------
 
     data = DATASETS[name]()
 
@@ -1187,10 +1034,6 @@ def train_regularized_pytorch_classifier(
     y = data.target.astype(
         np.int64
     )
-
-    # -----------------------------------------------------
-    # Train/Test split
-    # -----------------------------------------------------
 
     (
         X_train,
@@ -1204,12 +1047,6 @@ def train_regularized_pytorch_classifier(
         random_state=42,
         stratify=y,
     )
-
-    # -----------------------------------------------------
-    # Standardization
-    #
-    # Statistics come ONLY from training data.
-    # -----------------------------------------------------
 
     mean = X_train.mean(
         axis=0
@@ -1229,10 +1066,6 @@ def train_regularized_pytorch_classifier(
     X_test = (
         X_test - mean
     ) / std
-
-    # -----------------------------------------------------
-    # Convert to tensors
-    # -----------------------------------------------------
 
     X_train_t = torch.tensor(
         X_train,
@@ -1258,10 +1091,6 @@ def train_regularized_pytorch_classifier(
         device
     )
 
-    # -----------------------------------------------------
-    # DataLoader
-    # -----------------------------------------------------
-
     train_dataset = TensorDataset(
         X_train_t,
         y_train_t,
@@ -1281,19 +1110,11 @@ def train_regularized_pytorch_classifier(
         drop_last=False,
     )
 
-    # -----------------------------------------------------
-    # Model dimensions
-    # -----------------------------------------------------
-
     input_dim = X_train.shape[1]
 
     num_classes = len(
         np.unique(y)
     )
-
-    # -----------------------------------------------------
-    # Build model
-    # -----------------------------------------------------
 
     model = RegularizedMLP(
         input_dim=input_dim,
@@ -1304,15 +1125,7 @@ def train_regularized_pytorch_classifier(
         device
     )
 
-    # -----------------------------------------------------
-    # Loss function
-    # -----------------------------------------------------
-
     criterion = nn.CrossEntropyLoss()
-
-    # -----------------------------------------------------
-    # Optimizer
-    # -----------------------------------------------------
 
     optimizer = optim.Adam(
         model.parameters(),
@@ -1324,10 +1137,6 @@ def train_regularized_pytorch_classifier(
             "lr"
         ]
     )
-
-    # -----------------------------------------------------
-    # Learning-rate scheduler
-    # -----------------------------------------------------
 
     scheduler = None
 
@@ -1358,10 +1167,6 @@ def train_regularized_pytorch_classifier(
                 ),
             )
         )
-
-    # -----------------------------------------------------
-    # Training
-    # -----------------------------------------------------
 
     final_loss = None
 
@@ -1399,10 +1204,6 @@ def train_regularized_pytorch_classifier(
                 batch_y,
             )
 
-            # ---------------------------------------------
-            # Detect unstable / NaN training
-            # ---------------------------------------------
-
             if not torch.isfinite(
                 loss
             ):
@@ -1435,26 +1236,14 @@ def train_regularized_pytorch_classifier(
             / total_samples
         )
 
-        # ---------------------------------------------
-        # Scheduler updates once per epoch
-        # ---------------------------------------------
-
         if scheduler is not None:
             scheduler.step()
-
-    # -----------------------------------------------------
-    # Final learning rate
-    # -----------------------------------------------------
 
     final_lr = float(
         optimizer.param_groups[0][
             "lr"
         ]
     )
-
-    # -----------------------------------------------------
-    # Training-set evaluation
-    # -----------------------------------------------------
 
     model.eval()
 
@@ -1489,10 +1278,6 @@ def train_regularized_pytorch_classifier(
             .item()
         )
 
-        # ---------------------------------------------
-        # Test-set evaluation
-        # ---------------------------------------------
-
         test_outputs = model(
             X_test_t
         )
@@ -1513,10 +1298,6 @@ def train_regularized_pytorch_classifier(
             .mean()
             .item()
         )
-
-    # -----------------------------------------------------
-    # Return result
-    # -----------------------------------------------------
 
     result = {
         "framework": "PyTorch",
@@ -1602,10 +1383,6 @@ def train_regularized_pytorch_classifier(
         result
     )
 
-# ---------------------------------------------------------
-# Tool Registry
-# ---------------------------------------------------------
-
 AVAILABLE_TOOLS = {
     "load_dataset_summary":
         load_dataset_summary,
@@ -1618,8 +1395,8 @@ AVAILABLE_TOOLS = {
 
     "tune_hyperparameters":
         tune_hyperparameters,
-    
-    "feature_selection_analysis": 
+
+    "feature_selection_analysis":
         feature_selection_analysis,
 
     "train_regularized_pytorch_classifier":

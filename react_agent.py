@@ -6,7 +6,6 @@ import requests
 from ml_tools import AVAILABLE_TOOLS
 from benchmark_runner import benchmark_models_tool
 
-
 AVAILABLE_TOOLS = dict(
     AVAILABLE_TOOLS
 )
@@ -15,18 +14,8 @@ AVAILABLE_TOOLS[
     "benchmark_models_tool"
 ] = benchmark_models_tool
 
-
-# ---------------------------------------------------------
-# Ollama Configuration
-# ---------------------------------------------------------
-
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 MODEL_NAME = "llama3.2:3b"
-
-
-# ---------------------------------------------------------
-# System Prompt
-# ---------------------------------------------------------
 
 SYSTEM_PROMPT = """
 You are an expert Autonomous Machine Learning Assistant.
@@ -50,7 +39,6 @@ You have access to these tools:
    - classes
    - missing values
 
-
 2. train_sklearn_model
 
    Parameters:
@@ -66,7 +54,6 @@ You have access to these tools:
    - 5-fold cross-validation mean accuracy
    - cross-validation standard deviation
 
-
 3. train_pytorch_mlp
 
    Parameters:
@@ -80,7 +67,6 @@ You have access to these tools:
    Returns:
    - final training loss
    - test accuracy
-
 
 4. tune_hyperparameters
 
@@ -99,7 +85,6 @@ You have access to these tools:
    - cross-validation standard deviation
    - test accuracy
    - number of parameter combinations tested
-
 
 5. feature_selection_analysis
 
@@ -127,7 +112,6 @@ You have access to these tools:
    - selected feature names
    - baseline test accuracy
    - selected-features test accuracy
-
 
 6. train_regularized_pytorch_classifier
 
@@ -157,7 +141,6 @@ You have access to these tools:
    - training accuracy
    - test accuracy
 
-
 7. benchmark_models_tool
 
    Parameters:
@@ -184,13 +167,11 @@ You have access to these tools:
    - Markdown comparison table
    - Markdown output path
 
-
 IMPORTANT RULES:
 
 You operate in a strict ReAct loop.
 
 For every response, choose EXACTLY ONE of the following modes.
-
 
 ===========================================================
 MODE 1 - TOOL CALL
@@ -214,7 +195,6 @@ You MUST NOT:
 - invent tools
 - repeat successful experiments
 
-
 Valid tools are ONLY:
 
 load_dataset_summary
@@ -224,7 +204,6 @@ tune_hyperparameters
 feature_selection_analysis
 train_regularized_pytorch_classifier
 benchmark_models_tool
-
 
 TOOL SELECTION RULES:
 
@@ -256,12 +235,10 @@ The benchmark tool performs all dataset/model CV combinations in
 one tool execution. Do not separately call train_sklearn_model for
 the models when benchmark_models_tool is the required experiment.
 
-
 If the user asks to train a normal Scikit-Learn model without
 hyperparameter tuning, use:
 
 train_sklearn_model
-
 
 If the user asks for:
 - hyperparameter tuning
@@ -279,17 +256,14 @@ use:
 
 tune_hyperparameters
 
-
 For all SVC, SVM, Support Vector Machine, or Kernel SVM
 hyperparameter-tuning requests, use:
 
 "model_type": "svc"
 
-
 For Decision Tree hyperparameter-tuning requests, use:
 
 "model_type": "decision_tree"
-
 
 If the user asks for:
 - PCA
@@ -304,7 +278,6 @@ with:
 
 "method": "pca"
 
-
 If the user asks for:
 - Sequential Feature Selection
 - SFS
@@ -318,7 +291,6 @@ with:
 
 "method": "sequential"
 
-
 If the user explicitly gives n_components for PCA, use that value.
 
 If the user explicitly gives n_features_to_select for Sequential
@@ -327,7 +299,6 @@ Feature Selection, use that value.
 PCA and Sequential Feature Selection are separate experiments.
 If both are requested, execute feature_selection_analysis twice,
 ONE experiment per response.
-
 
 If the user asks for:
 - a deep PyTorch classifier
@@ -343,23 +314,19 @@ use:
 
 train_regularized_pytorch_classifier
 
-
 For StepLR requests, use:
 
 "scheduler_type": "step"
 
-
 For ExponentialLR requests, use:
 
 "scheduler_type": "exponential"
-
 
 If the user asks to compare StepLR and ExponentialLR,
 execute train_regularized_pytorch_classifier TWICE,
 ONE scheduler experiment per response.
 
 Never execute both scheduler experiments in one response.
-
 
 If the user asks to tune BOTH an SVC and a Decision Tree,
 execute tune_hyperparameters TWICE, but NEVER in the same response.
@@ -371,7 +338,6 @@ which experiments remain unfinished.
 
 When the controller gives a NEXT ACTION CONTRACT, obey it exactly.
 Do not choose a different experiment. Do not repeat a completed one.
-
 
 SELF-HEALING RULES:
 
@@ -403,7 +369,6 @@ Final comparison and recommendation are still performed from the
 successful benchmark Observation; the benchmark tool does not choose
 a winner.
 
-
 ===========================================================
 MODE 2 - FINAL ANSWER
 ===========================================================
@@ -415,7 +380,6 @@ Output:
 
 Thought: I have gathered all necessary experimental data.
 Final Answer: Provide the complete answer.
-
 
 CRITICAL:
 
@@ -439,11 +403,6 @@ Do not claim that test accuracy alone proves absence of overfitting.
 
 Begin.
 """
-
-
-# ---------------------------------------------------------
-# Query Local Ollama Model
-# ---------------------------------------------------------
 
 def query_local_llm(prompt: str) -> str:
     """
@@ -482,11 +441,6 @@ def query_local_llm(prompt: str) -> str:
         "",
     ).strip()
 
-
-# ---------------------------------------------------------
-# Detect Hyperparameter-Tuning Request
-# ---------------------------------------------------------
-
 def tuning_requested(query: str) -> bool:
     """
     Returns True when the query explicitly requests
@@ -511,11 +465,6 @@ def tuning_requested(query: str) -> bool:
         for term in tuning_terms
     )
 
-
-# ---------------------------------------------------------
-# Detect Dataset Mention
-# ---------------------------------------------------------
-
 def detect_dataset_name(user_query: str):
     """
     Returns a dataset explicitly mentioned in the user query.
@@ -538,11 +487,6 @@ def detect_dataset_name(user_query: str):
         return "iris"
 
     return None
-
-
-# ---------------------------------------------------------
-# Detect Task 3 Benchmark Request
-# ---------------------------------------------------------
 
 def benchmark_requested(
     user_query: str,
@@ -608,7 +552,6 @@ def benchmark_requested(
         and dataset_mentions >= 2
     )
 
-
 def detect_benchmark_datasets(
     user_query: str,
 ):
@@ -673,7 +616,6 @@ def detect_benchmark_datasets(
         ]
 
     return datasets
-
 
 def detect_benchmark_algorithms(
     user_query: str,
@@ -747,7 +689,6 @@ def detect_benchmark_algorithms(
 
     return algorithms
 
-
 def detect_cv_folds(
     user_query: str,
     default: int = 5,
@@ -770,7 +711,6 @@ def detect_cv_folds(
         )
 
     return default
-
 
 def validate_benchmark_parameters_against_query(
     parameters,
@@ -870,11 +810,6 @@ def validate_benchmark_parameters_against_query(
 
     return True, ""
 
-
-# ---------------------------------------------------------
-# Determine Required Experiments
-# ---------------------------------------------------------
-
 def detect_required_experiments(user_query: str):
     """
     Detects experiments explicitly requested by the user.
@@ -885,11 +820,6 @@ def detect_required_experiments(user_query: str):
 
     query = user_query.lower()
     requirements = []
-
-
-    # -----------------------------------------------------
-    # Comprehensive Task 3 Benchmark
-    # -----------------------------------------------------
 
     if benchmark_requested(
         user_query
@@ -905,10 +835,6 @@ def detect_required_experiments(user_query: str):
         query
     )
 
-    # -----------------------------------------------------
-    # Dataset Analysis
-    # -----------------------------------------------------
-
     if (
         "analyze" in query
         or "analyse" in query
@@ -922,10 +848,6 @@ def detect_required_experiments(user_query: str):
             )
         )
 
-    # -----------------------------------------------------
-    # Random Forest
-    # -----------------------------------------------------
-
     if (
         "random forest" in query
         or "random_forest" in query
@@ -937,10 +859,6 @@ def detect_required_experiments(user_query: str):
             )
         )
 
-    # -----------------------------------------------------
-    # Logistic Regression
-    # -----------------------------------------------------
-
     if (
         "logistic regression" in query
         or "logistic_regression" in query
@@ -951,10 +869,6 @@ def detect_required_experiments(user_query: str):
                 "logistic_regression",
             )
         )
-
-    # -----------------------------------------------------
-    # Decision Tree
-    # -----------------------------------------------------
 
     decision_tree_requested = (
         "decision tree" in query
@@ -979,10 +893,6 @@ def detect_required_experiments(user_query: str):
                 )
             )
 
-    # -----------------------------------------------------
-    # SVC / SVM
-    # -----------------------------------------------------
-
     svc_requested = (
         "svc" in query
         or "svm" in query
@@ -1002,10 +912,6 @@ def detect_required_experiments(user_query: str):
             )
         )
 
-    # -----------------------------------------------------
-    # PCA / Principal Component Analysis
-    # -----------------------------------------------------
-
     pca_requested = (
         "pca" in query
         or "principal component" in query
@@ -1018,10 +924,6 @@ def detect_required_experiments(user_query: str):
                 "pca",
             )
         )
-
-    # -----------------------------------------------------
-    # Sequential Feature Selection
-    # -----------------------------------------------------
 
     sequential_requested = (
         "sequential feature selection" in query
@@ -1037,10 +939,6 @@ def detect_required_experiments(user_query: str):
                 "sequential",
             )
         )
-
-    # -----------------------------------------------------
-    # Regularized Deep PyTorch Classifier
-    # -----------------------------------------------------
 
     regularized_pytorch_requested = (
         "regularized" in query
@@ -1099,10 +997,6 @@ def detect_required_experiments(user_query: str):
                 )
             )
 
-    # -----------------------------------------------------
-    # Baseline PyTorch MLP
-    # -----------------------------------------------------
-
     if (
         (
             "pytorch" in query
@@ -1118,11 +1012,6 @@ def detect_required_experiments(user_query: str):
         )
 
     return requirements
-
-
-# ---------------------------------------------------------
-# Normalize Model Names
-# ---------------------------------------------------------
 
 def normalize_model_type(
     tool_name: str,
@@ -1179,11 +1068,6 @@ def normalize_model_type(
 
     return normalized
 
-
-# ---------------------------------------------------------
-# Requirement Matching
-# ---------------------------------------------------------
-
 def experiment_matches_requirement(
     tool_name,
     parameters,
@@ -1220,11 +1104,6 @@ def experiment_matches_requirement(
     )
 
     return executed_value == normalized_required
-
-
-# ---------------------------------------------------------
-# Find Missing Requirements
-# ---------------------------------------------------------
 
 def find_missing_requirements(
     requirements,
@@ -1264,11 +1143,6 @@ def find_missing_requirements(
             )
 
     return missing
-
-
-# ---------------------------------------------------------
-# Human-Readable Requirement Names
-# ---------------------------------------------------------
 
 def format_requirement_name(
     tool_name,
@@ -1327,7 +1201,6 @@ def format_requirement_name(
 
     return tool_name
 
-
 def format_missing_requirements(
     missing,
 ):
@@ -1342,11 +1215,6 @@ def format_missing_requirements(
         )
         for tool_name, model_name in missing
     )
-
-
-# ---------------------------------------------------------
-# Build Strict Next-Action Contract
-# ---------------------------------------------------------
 
 def build_next_action_contract(
     missing,
@@ -1517,11 +1385,6 @@ def build_next_action_contract(
         lines
     )
 
-
-# ---------------------------------------------------------
-# Validate Proposed Tool Call Against Missing Work
-# ---------------------------------------------------------
-
 def proposed_call_matches_missing(
     tool_name,
     parameters,
@@ -1546,11 +1409,6 @@ def proposed_call_matches_missing(
             return True
 
     return False
-
-
-# ---------------------------------------------------------
-# Find the Logical Requirement Matched by a Proposed Call
-# ---------------------------------------------------------
 
 def find_matching_requirement(
     tool_name,
@@ -1583,11 +1441,6 @@ def find_matching_requirement(
             )
 
     return None
-
-
-# ---------------------------------------------------------
-# Classify Recoverable Tool Errors
-# ---------------------------------------------------------
 
 def classify_tool_error(
     result,
@@ -1627,10 +1480,6 @@ def classify_tool_error(
         .strip()
     )
 
-    # ---------------------------------------------
-    # NaN / Inf / unstable optimization
-    # ---------------------------------------------
-
     non_finite_patterns = [
         "nan",
         "non-finite",
@@ -1648,10 +1497,6 @@ def classify_tool_error(
         for pattern in non_finite_patterns
     ):
         return "non_finite_loss"
-
-    # ---------------------------------------------
-    # Tensor / matrix / feature shape failures
-    # ---------------------------------------------
 
     shape_patterns = [
         "shape mismatch",
@@ -1677,10 +1522,6 @@ def classify_tool_error(
         for pattern in shape_patterns
     ):
         return "shape_mismatch"
-
-    # ---------------------------------------------
-    # Invalid parameter / argument failures
-    # ---------------------------------------------
 
     parameter_patterns = [
         "must be",
@@ -1708,11 +1549,6 @@ def classify_tool_error(
 
     return "runtime_error"
 
-
-# ---------------------------------------------------------
-# Build Stable Self-Healing Attempt Key
-# ---------------------------------------------------------
-
 def build_healing_key(
     tool_name,
     requirement,
@@ -1730,11 +1566,6 @@ def build_healing_key(
             requirement
         ),
     )
-
-
-# ---------------------------------------------------------
-# Build Self-Healing Contract
-# ---------------------------------------------------------
 
 def build_self_healing_contract(
     tool_name,
@@ -1943,11 +1774,6 @@ def build_self_healing_contract(
         lines
     )
 
-
-# ---------------------------------------------------------
-# Check Whether Tool Returned JSON Error
-# ---------------------------------------------------------
-
 def tool_result_has_error(
     tool_result,
 ):
@@ -1976,11 +1802,6 @@ def tool_result_has_error(
         isinstance(parsed, dict)
         and "error" in parsed
     )
-
-
-# ---------------------------------------------------------
-# Extract Completed Benchmark Result
-# ---------------------------------------------------------
 
 def extract_completed_benchmark_result(
     completed_experiments,
@@ -2034,11 +1855,6 @@ def extract_completed_benchmark_result(
             return result
 
     return None
-
-
-# ---------------------------------------------------------
-# Calculate Controller-Verified Benchmark Winners
-# ---------------------------------------------------------
 
 def calculate_benchmark_recommendations(
     benchmark_result,
@@ -2195,11 +2011,6 @@ def calculate_benchmark_recommendations(
 
     return recommendations
 
-
-# ---------------------------------------------------------
-# Benchmark Structured-Decision Prompt
-# ---------------------------------------------------------
-
 def build_benchmark_decision_prompt(
     user_query,
     benchmark_result,
@@ -2226,11 +2037,9 @@ The complete requested cross-validation benchmark has already run.
 Original User Query:
 {user_query}
 
-
 Benchmark Evidence:
 
 {table}
-
 
 Metric Semantics:
 - Higher CV mean accuracy means better average validation accuracy.
@@ -2243,7 +2052,6 @@ Metric Semantics:
 
 Your task is to identify the strongest algorithm on EACH dataset
 using those rules.
-
 
 OUTPUT FORMAT IS STRICT.
 
@@ -2355,10 +2163,6 @@ def parse_benchmark_decision(
 
     raw = llm_output.strip()
 
-    # -----------------------------------------------------
-    # Remove common Markdown code fences.
-    # -----------------------------------------------------
-
     cleaned = re.sub(
         r"^\s*```(?:json)?\s*",
         "",
@@ -2373,11 +2177,6 @@ def parse_benchmark_decision(
     ).strip()
 
     decoder = json.JSONDecoder()
-
-    # -----------------------------------------------------
-    # Strategy 1:
-    # Parse JSON after a normal Decision: label.
-    # -----------------------------------------------------
 
     decision_label = re.search(
         r"Decision\s*:\s*",
@@ -2447,11 +2246,6 @@ def parse_benchmark_decision(
 
             except json.JSONDecodeError:
                 pass
-
-    # -----------------------------------------------------
-    # Strategy 2:
-    # Parse a JSON object anywhere in the response.
-    # -----------------------------------------------------
 
     for match in re.finditer(
         r"\{",
@@ -2524,11 +2318,6 @@ def parse_benchmark_decision(
 
             return parsed, None
 
-    # -----------------------------------------------------
-    # Strategy 3:
-    # Directly recover a simple recommendations object.
-    # -----------------------------------------------------
-
     recommendations_match = re.search(
         r'"recommendations"\s*:\s*'
         r'(\{[^{}]*\})',
@@ -2563,7 +2352,6 @@ def parse_benchmark_decision(
     return None, (
         "No valid benchmark Decision JSON object was found."
     )
-
 
 def validate_benchmark_decision(
     decision,
@@ -2665,11 +2453,6 @@ def validate_benchmark_decision(
     }
 
     return True, "", normalized
-
-
-# ---------------------------------------------------------
-# Render Grounded Benchmark Final Answer
-# ---------------------------------------------------------
 
 def render_grounded_benchmark_answer(
     benchmark_result,
@@ -2893,11 +2676,6 @@ def render_grounded_benchmark_answer(
         + recovery_text
     )
 
-
-# ---------------------------------------------------------
-# Build Controller-Verified Numerical Comparison Facts
-# ---------------------------------------------------------
-
 def build_numeric_comparison_facts(
     completed_experiments,
 ):
@@ -3054,9 +2832,6 @@ def build_numeric_comparison_facts(
 
         return values
 
-    # Metrics that are configuration values rather than
-    # performance quantities. They are not useful as
-    # "better/worse" numerical comparisons.
     ignored_metric_names = {
         "input_dim",
         "hidden_dim_1",
@@ -3077,8 +2852,6 @@ def build_numeric_comparison_facts(
 
     sections = []
 
-    # Compare every pair of completed experiments. This also
-    # scales to the larger model-comparison benchmark in Task 3.
     for first_index in range(
         len(parsed_experiments)
     ):
@@ -3181,11 +2954,6 @@ def build_numeric_comparison_facts(
         )
     )
 
-
-# ---------------------------------------------------------
-# Structured Comparison Decision
-# ---------------------------------------------------------
-
 def _normalize_metric_token(
     value,
 ):
@@ -3210,7 +2978,6 @@ def _normalize_metric_token(
         "_"
     )
 
-
 def _metric_preference(
     metric_name,
 ):
@@ -3228,8 +2995,6 @@ def _metric_preference(
         .lower()
     )
 
-    # Higher is better for common predictive-performance
-    # scores and explained-variance quantities.
     if (
         "accuracy" in short_name
         or short_name in {
@@ -3247,7 +3012,6 @@ def _metric_preference(
     ):
         return "higher"
 
-    # Lower is better for losses, errors, and variability.
     if (
         "loss" in short_name
         or "error" in short_name
@@ -3258,10 +3022,7 @@ def _metric_preference(
     ):
         return "lower"
 
-    # Learning rate and other configuration/state quantities
-    # have no universal "better" direction.
     return "neutral"
-
 
 def _comparison_experiment_label(
     experiment,
@@ -3327,7 +3088,6 @@ def _comparison_experiment_label(
 
     return tool_name
 
-
 def _flatten_numeric_result(
     data,
     prefix="",
@@ -3383,7 +3143,6 @@ def _flatten_numeric_result(
             )
 
     return values
-
 
 def build_comparison_records(
     completed_experiments,
@@ -3584,7 +3343,6 @@ def build_comparison_records(
 
     return records
 
-
 def build_structured_decision_prompt(
     user_query,
     completed_experiments,
@@ -3652,16 +3410,13 @@ that metric.
 Original User Query:
 {user_query}
 
-
 Successful Experiments:
 
 {chr(10).join(results_text)}
 
-
 Controller-Verified Metric Records:
 
 {chr(10).join(record_lines)}
-
 
 GENERAL METRIC SEMANTICS:
 
@@ -3702,7 +3457,6 @@ Return a corrected Decision using only the verified records above.
 """
 
     return prompt
-
 
 def parse_structured_decision(
     llm_output,
@@ -3758,7 +3512,6 @@ def parse_structured_decision(
         )
 
     return decision, None
-
 
 def validate_structured_decision(
     decision,
@@ -3835,9 +3588,6 @@ def validate_structured_decision(
             f"Available metrics: {available}"
         ), None
 
-    # For the current two-experiment comparison, one metric
-    # should map to exactly one pairwise record. Task 3 can extend
-    # this validator to aggregate three or more models.
     if len(matching_records) != 1:
         return False, (
             "primary_metric is ambiguous across multiple "
@@ -4013,7 +3763,6 @@ def validate_structured_decision(
 
     return True, "", normalized
 
-
 def _metric_display_name(
     metric,
 ):
@@ -4062,7 +3811,6 @@ def _metric_display_name(
         ).title(),
     )
 
-
 def _format_number(
     value,
 ):
@@ -4091,7 +3839,6 @@ def _format_number(
         return f"{value:.1f}"
 
     return f"{value:.8g}"
-
 
 def render_grounded_comparison_answer(
     completed_experiments,
@@ -4131,7 +3878,6 @@ def render_grounded_comparison_answer(
         ]
     )
 
-    # Keep one row per metric for this experiment pair.
     pair_records = [
         record
         for record in records
@@ -4147,9 +3893,6 @@ def render_grounded_comparison_answer(
         )
     ]
 
-    # Configuration values already excluded by
-    # build_comparison_records(). Initial LR is useful for
-    # debugging but is not required in the current comparison.
     pair_records = [
         record
         for record in pair_records
@@ -4384,11 +4127,6 @@ def render_grounded_comparison_answer(
         + recovery_text
     )
 
-
-# ---------------------------------------------------------
-# Build Execution-History Summary
-# ---------------------------------------------------------
-
 def build_execution_history_summary(
     execution_history,
 ):
@@ -4481,11 +4219,6 @@ def build_execution_history_summary(
         lines
     ).strip()
 
-
-# ---------------------------------------------------------
-# Build Deterministic Self-Healing Recovery Note
-# ---------------------------------------------------------
-
 def build_recovery_note(
     execution_history,
 ):
@@ -4563,11 +4296,6 @@ def build_recovery_note(
         )
 
     return note
-
-
-# ---------------------------------------------------------
-# Validate Final Answer Against Execution History
-# ---------------------------------------------------------
 
 def validate_final_answer_against_execution_history(
     llm_output,
@@ -4656,11 +4384,6 @@ def validate_final_answer_against_execution_history(
         )
 
     return True, ""
-
-
-# ---------------------------------------------------------
-# Build Finalization Prompt
-# ---------------------------------------------------------
 
 def build_finalization_prompt(
     user_query,
@@ -4755,24 +4478,19 @@ Use ONLY the successful experimental observations provided below.
 Original User Query:
 {user_query}
 
-
 Successful Experimental Results:
 
 {joined_results}
 
-
 {comparison_facts}
-
 
 Execution History:
 
 {execution_history_text}
 
-
 Controller-Grounded Recovery Evidence:
 
 {recovery_note if recovery_note else "No failed tool attempt occurred before successful completion."}
-
 
 Interpretation Rules:
 
@@ -4860,7 +4578,6 @@ Before answering, internally verify that:
 3. Every required experiment is represented in the explanation.
 4. The conclusion is supported by the experimental evidence.
 
-
 OUTPUT FORMAT IS STRICT.
 
 Your response MUST begin with the Thought line below.
@@ -4896,11 +4613,6 @@ Return only the required Thought and Final Answer.
 
     return prompt
 
-
-# ---------------------------------------------------------
-# Validate Finalization Output Format
-# ---------------------------------------------------------
-
 def is_valid_final_answer_format(llm_output: str) -> bool:
     """
     Accepts a finalization response only when it follows:
@@ -4931,11 +4643,6 @@ def is_valid_final_answer_format(llm_output: str) -> bool:
     )
 
     return pattern.match(normalized) is not None
-
-
-# ---------------------------------------------------------
-# Detect Unsupported ML Claims
-# ---------------------------------------------------------
 
 def has_unsupported_ml_claims(
     llm_output: str,
@@ -4982,11 +4689,6 @@ def has_unsupported_ml_claims(
         for phrase in unsupported_phrases
     )
 
-
-# ---------------------------------------------------------
-# ReAct Agent Loop
-# ---------------------------------------------------------
-
 def run_agent_loop(
     user_query: str,
     max_iterations: int = 10,
@@ -5009,49 +4711,16 @@ def run_agent_loop(
     completed_experiments = []
     executed_calls = {}
 
-    # Full attempt history is kept separately from successful
-    # completed_experiments. This preserves failed attempts as
-    # reporting evidence without allowing them to satisfy a
-    # required experiment.
     execution_history = []
-
-    # -----------------------------------------------------
-    # Task 3.1 Self-Healing State
-    # -----------------------------------------------------
 
     healing_attempts = {}
 
-    # The initial failed call is not counted as a retry.
-    # After that failure, the agent may make up to three
-    # corrected retries for the same logical experiment.
     max_healing_retries = 3
-
-    # -----------------------------------------------------
-    # Deterministic Fault-Injection Test Hook
-    # -----------------------------------------------------
-    #
-    # This hook exists only to make Task 3.1 recovery tests
-    # reproducible. It can deliberately corrupt the FIRST call
-    # to a selected tool. Normal agent runs leave it as None.
-    #
-    # Example:
-    # {
-    #     "train_regularized_pytorch_classifier": {
-    #         "dropout": 1.5
-    #     }
-    # }
-    #
-    # After the first matching tool call is modified, the hook
-    # disables itself so the self-healing retry can succeed.
 
     if forced_first_action_overrides is None:
         forced_first_action_overrides = {}
 
     forced_override_used = False
-
-    # -----------------------------------------------------
-    # Initial controller guidance
-    # -----------------------------------------------------
 
     initial_missing = find_missing_requirements(
         requirements,
@@ -5078,10 +4747,6 @@ def run_agent_loop(
     benchmark_decision = None
     benchmark_decision_retry_message = None
 
-    # -----------------------------------------------------
-    # Main Loop
-    # -----------------------------------------------------
-
     for step in range(
         1,
         max_iterations + 1,
@@ -5090,10 +4755,6 @@ def run_agent_loop(
         print()
         print(f"--- Step {step} ---")
 
-        # -------------------------------------------------
-        # FINALIZATION MODE
-        # -------------------------------------------------
-
         if finalization_mode:
 
             benchmark_result = (
@@ -5101,10 +4762,6 @@ def run_agent_loop(
                     completed_experiments
                 )
             )
-
-            # ---------------------------------------------
-            # Task 3.3 Benchmark Finalization
-            # ---------------------------------------------
 
             if benchmark_result is not None:
 
@@ -5235,15 +4892,6 @@ def run_agent_loop(
                     completed_experiments
                 )
             )
-
-            # ---------------------------------------------
-            # Structured comparison path
-            #
-            # When at least two experiments expose comparable
-            # metrics, the LLM first makes a structured semantic
-            # decision. Python then validates the arithmetic and
-            # renders the final numerical comparison itself.
-            # ---------------------------------------------
 
             if comparison_records:
 
@@ -5381,14 +5029,6 @@ def run_agent_loop(
 
                 return final_output
 
-            # ---------------------------------------------
-            # Fallback finalization path
-            #
-            # Single-experiment tasks or tasks without common
-            # comparable numeric metrics still use the generic
-            # LLM finalization logic.
-            # ---------------------------------------------
-
             final_prompt = build_finalization_prompt(
                 user_query,
                 completed_experiments,
@@ -5502,10 +5142,6 @@ def run_agent_loop(
 
             continue
 
-        # -------------------------------------------------
-        # NORMAL REACT MODE
-        # -------------------------------------------------
-
         try:
             llm_output = query_local_llm(
                 prompt
@@ -5528,10 +5164,6 @@ def run_agent_loop(
             requirements,
             completed_experiments,
         )
-
-        # -------------------------------------------------
-        # LLM Attempts Final Answer
-        # -------------------------------------------------
 
         if "Final Answer:" in llm_output:
 
@@ -5587,10 +5219,6 @@ def run_agent_loop(
             finalization_mode = True
             continue
 
-        # -------------------------------------------------
-        # Parse Actions
-        # -------------------------------------------------
-
         action_matches = re.findall(
             r"Action:\s*([a-zA-Z0-9_]+)",
             llm_output,
@@ -5601,10 +5229,6 @@ def run_agent_loop(
             llm_output,
             re.DOTALL,
         )
-
-        # -------------------------------------------------
-        # Reject Multiple Actions
-        # -------------------------------------------------
 
         if (
             len(action_matches) > 1
@@ -5642,10 +5266,6 @@ def run_agent_loop(
 
             continue
 
-        # -------------------------------------------------
-        # Exactly One Action
-        # -------------------------------------------------
-
         if (
             len(action_matches) == 1
             and len(input_matches) == 1
@@ -5662,10 +5282,6 @@ def run_agent_loop(
                     0
                 ].strip()
             )
-
-            # ---------------------------------------------
-            # Parse JSON
-            # ---------------------------------------------
 
             try:
                 kwargs = json.loads(
@@ -5704,16 +5320,6 @@ def run_agent_loop(
                 )
 
                 continue
-
-            # ---------------------------------------------
-            # Optional Deterministic Fault Injection
-            # ---------------------------------------------
-            #
-            # The LLM still proposes the normal experiment.
-            # For a dedicated self-healing test, the controller
-            # can corrupt one parameter on the first execution.
-            # This avoids relying on a small LLM to voluntarily
-            # submit an obviously invalid value.
 
             if (
                 not forced_override_used
@@ -5767,10 +5373,6 @@ def run_agent_loop(
                     f"{json.dumps(kwargs, sort_keys=True)}"
                 )
 
-            # ---------------------------------------------
-            # Unique Tool Call Key
-            # ---------------------------------------------
-
             call_key = (
                 tool_name,
                 json.dumps(
@@ -5782,10 +5384,6 @@ def run_agent_loop(
                     ),
                 ),
             )
-
-            # ---------------------------------------------
-            # Prevent Exact Duplicate Execution
-            # ---------------------------------------------
 
             if call_key in executed_calls:
 
@@ -5833,10 +5431,6 @@ def run_agent_loop(
 
                 continue
 
-            # ---------------------------------------------
-            # Validate Tool
-            # ---------------------------------------------
-
             if tool_name not in AVAILABLE_TOOLS:
 
                 valid_tools = ", ".join(
@@ -5872,15 +5466,6 @@ def run_agent_loop(
                 )
 
                 continue
-
-            # ---------------------------------------------
-            # Reject Irrelevant / Already-Completed Work
-            #
-            # This is stricter than duplicate detection.
-            # Even if the LLM changes optional parameters,
-            # it cannot keep re-running a completed model
-            # while another required experiment is missing.
-            # ---------------------------------------------
 
             if (
                 missing_before_call
@@ -5922,10 +5507,6 @@ def run_agent_loop(
                 )
 
                 continue
-
-            # ---------------------------------------------
-            # Validate Benchmark Coverage Against User Query
-            # ---------------------------------------------
 
             if tool_name == "benchmark_models_tool":
 
@@ -5969,10 +5550,6 @@ def run_agent_loop(
 
                     continue
 
-            # ---------------------------------------------
-            # Identify the Logical Requirement Being Attempted
-            # ---------------------------------------------
-
             current_requirement = (
                 find_matching_requirement(
                     tool_name,
@@ -5987,10 +5564,6 @@ def run_agent_loop(
                     current_requirement,
                 )
             )
-
-            # ---------------------------------------------
-            # Execute Tool
-            # ---------------------------------------------
 
             tool_result = None
             execution_error = None
@@ -6034,10 +5607,6 @@ def run_agent_loop(
                     f"{str(e)}"
                 )
 
-            # ---------------------------------------------
-            # SELF-HEALING PATH
-            # ---------------------------------------------
-
             if execution_error is not None:
 
                 error_type = (
@@ -6065,10 +5634,6 @@ def run_agent_loop(
                     )
                 )
 
-                # The first failure enters healing mode and
-                # authorizes retry 1. Each failed corrected retry
-                # advances the counter. Stop after the configured
-                # number of corrected retries has been exhausted.
                 if (
                     previous_failures
                     >= max_healing_retries
@@ -6153,9 +5718,6 @@ def run_agent_loop(
                     self_healing_contract
                 )
 
-                # Feed the exact failure and repair contract back
-                # to the LLM. The failed call is NOT added to
-                # completed_experiments or executed_calls.
                 prompt += (
                     f"\n{llm_output}\n"
                     f"{observation}\n"
@@ -6163,10 +5725,6 @@ def run_agent_loop(
                 )
 
                 continue
-
-            # ---------------------------------------------
-            # SUCCESS PATH
-            # ---------------------------------------------
 
             executed_calls[
                 call_key
@@ -6191,8 +5749,6 @@ def run_agent_loop(
                 }
             )
 
-            # A successful repair clears the failure counter for
-            # this logical experiment.
             healing_attempts.pop(
                 healing_key,
                 None,
@@ -6208,20 +5764,12 @@ def run_agent_loop(
                 observation
             )
 
-            # ---------------------------------------------
-            # Recalculate Remaining Requirements
-            # ---------------------------------------------
-
             missing_after_call = (
                 find_missing_requirements(
                     requirements,
                     completed_experiments,
                 )
             )
-
-            # ---------------------------------------------
-            # Some Experiments Remain
-            # ---------------------------------------------
 
             if missing_after_call:
 
@@ -6260,10 +5808,6 @@ def run_agent_loop(
                     f"{next_contract}\n"
                 )
 
-            # ---------------------------------------------
-            # Everything Complete -> Finalization
-            # ---------------------------------------------
-
             else:
 
                 controller_state = (
@@ -6283,10 +5827,6 @@ def run_agent_loop(
                 )
 
                 finalization_mode = True
-
-        # -------------------------------------------------
-        # Invalid LLM Format
-        # -------------------------------------------------
 
         else:
 
@@ -6320,10 +5860,6 @@ def run_agent_loop(
                 f"{next_contract}\n"
             )
 
-    # -----------------------------------------------------
-    # Maximum Iterations
-    # -----------------------------------------------------
-
     print()
     print(
         ">>> Maximum number of iterations reached."
@@ -6335,11 +5871,6 @@ def run_agent_loop(
     )
 
     return None
-
-
-# ---------------------------------------------------------
-# Task 3.3 Autonomous Multi-Model Benchmark Test
-# ---------------------------------------------------------
 
 if __name__ == "__main__":
 

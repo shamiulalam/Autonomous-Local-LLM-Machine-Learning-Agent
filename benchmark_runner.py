@@ -43,21 +43,11 @@ from sklearn.tree import DecisionTreeClassifier
 
 from ml_tools import DATASETS
 
-
-# ---------------------------------------------------------
-# Supported Algorithms
-# ---------------------------------------------------------
-
 SUPPORTED_ALGORITHMS = {
     "logistic_regression",
     "decision_tree",
     "svc",
 }
-
-
-# ---------------------------------------------------------
-# Normalization Helpers
-# ---------------------------------------------------------
 
 def normalize_algorithm_name(
     algorithm: str,
@@ -90,11 +80,6 @@ def normalize_algorithm_name(
         normalized,
         normalized,
     )
-
-
-# ---------------------------------------------------------
-# Estimator Factory
-# ---------------------------------------------------------
 
 def build_estimator(
     algorithm: str,
@@ -160,11 +145,6 @@ def build_estimator(
         f"{sorted(SUPPORTED_ALGORITHMS)}"
     )
 
-
-# ---------------------------------------------------------
-# Dataset Validation
-# ---------------------------------------------------------
-
 def validate_dataset_name(
     dataset_name: str,
 ) -> str:
@@ -187,11 +167,6 @@ def validate_dataset_name(
         )
 
     return normalized
-
-
-# ---------------------------------------------------------
-# Single CV Experiment
-# ---------------------------------------------------------
 
 def evaluate_model_cv(
     dataset_name: str,
@@ -352,11 +327,6 @@ def evaluate_model_cv(
         ),
     }
 
-
-# ---------------------------------------------------------
-# Full Benchmark
-# ---------------------------------------------------------
-
 def run_benchmark(
     datasets: list[str] | tuple[str, ...] | None = None,
     algorithms: list[str] | tuple[str, ...] | None = None,
@@ -448,11 +418,6 @@ def run_benchmark(
         "experiments": experiments,
     }
 
-
-# ---------------------------------------------------------
-# Markdown Table
-# ---------------------------------------------------------
-
 def benchmark_to_markdown(
     benchmark_result: dict[str, Any],
 ) -> str:
@@ -502,11 +467,6 @@ def benchmark_to_markdown(
         lines
     )
 
-
-# ---------------------------------------------------------
-# Save Markdown Report
-# ---------------------------------------------------------
-
 def save_benchmark_markdown(
     benchmark_result: dict[str, Any],
     output_path: str | Path = (
@@ -536,11 +496,6 @@ def save_benchmark_markdown(
     )
 
     return path
-
-
-# ---------------------------------------------------------
-# JSON Wrapper for Later Agent Integration
-# ---------------------------------------------------------
 
 def benchmark_models_tool(
     datasets: list[str] | None = None,
@@ -614,11 +569,6 @@ def benchmark_models_tool(
                 )
             }
         )
-
-
-# ---------------------------------------------------------
-# Command-Line Interface
-# ---------------------------------------------------------
 
 def main():
     """
@@ -730,7 +680,6 @@ def main():
         f"Markdown report saved to: "
         f"{output_path}"
     )
-
 
 if __name__ == "__main__":
     main()
