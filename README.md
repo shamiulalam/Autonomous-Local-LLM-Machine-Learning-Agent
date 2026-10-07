@@ -1,5 +1,3 @@
-# Autonomous Local LLM Machine Learning Agent
-
 A local autonomous machine learning agent built for **CSE445 Assignment #3**.  
 The project runs fully inside **Windows WSL2**, uses a local **Ollama** model for reasoning, and executes machine learning tools implemented with **scikit-learn** and **PyTorch**.
 
@@ -52,7 +50,7 @@ The controller is responsible for enforcing required experiments, validating num
 # Project Structure
 
 ```text
-cse445_agent/
+Autonomous Local LLM Machine Learning Agent
 │
 ├── ml_tools.py
 ├── react_agent.py
